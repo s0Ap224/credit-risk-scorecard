@@ -1,0 +1,92 @@
+% !TeX program = xelatex
+% !TeX encoding = UTF-8
+\documentclass[UTF8,12pt,a4paper,fontset=windows]{ctexart}
+
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{needspace}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[hidelinks]{hyperref}
+\geometry{left=2.5cm,right=2.5cm,top=2.2cm,bottom=2.2cm}
+\hypersetup{pdftitle={基于 Give Me Some Credit 的信用评分卡分析},pdfauthor={s0Ap224}}
+\linespread{1.18}
+\setlength{\parskip}{0pt}
+\pagestyle{plain}
+\ctexset{
+  section={format=\Large\bfseries,beforeskip=1.2ex,afterskip=0.8ex},
+  subsection={format=\large\bfseries,beforeskip=1.0ex,afterskip=0.6ex},
+  paragraph={beforeskip=0pt}
+}
+
+\begin{document}
+\begin{center}
+  {\LARGE\bfseries 基于 Give Me Some Credit 的信用评分卡分析}\\[0.45em]
+  {\small 公开作品集版 \quad \href{https://github.com/s0Ap224/credit-risk-scorecard}{s0Ap224 / credit-risk-scorecard}}
+\end{center}
+\vspace{0.3em}
+
+\section{业务目标与样本划分}
+\subsection{明确建模对象}
+\input{sections/modeling_object}
+
+\subsection{固定样本划分}
+\label{sec:sample-split}
+\input{sections/sample_split}
+
+\section{数据预处理与探索性分析}
+\label{sec:module-two}
+\subsection{数据审计}
+\input{sections/data_audit}
+\subsection{特征分布与风险关系}
+\input{sections/risk_relationship}
+\subsection{异常值和缺失值处理}
+\label{sec:preprocessing}
+\input{sections/preprocessing}
+
+\section{分箱、WOE 与 IV}
+\subsection{分箱方案}
+\label{sec:binning}
+\input{sections/binning}
+
+\subsection{WOE 与 IV 编码}
+\label{sec:woe}
+\input{sections/woe_iv}
+\subsection{候选变量的选择}
+\label{sec:feature-selection}
+\input{sections/feature_selection}
+
+\section{Logistic 建模与比较基准}
+\label{sec:logistic}
+\input{sections/logistic_model}
+
+\section{评分刻度与标准评分卡}
+\label{sec:scorecard}
+\input{sections/scorecard}
+
+\section{模型评价与风险解释}
+\label{sec:model-evaluation}
+\input{sections/model_evaluation}
+
+\Needspace{9\baselineskip}
+\section{阈值选择与业务决策}
+\label{sec:decision-thresholds}
+\input{sections/decision_thresholds}
+
+\Needspace{15\baselineskip}
+\section{选做拓展：评分分布的 PSI}
+\label{sec:score-psi}
+\input{sections/score_psi}
+
+\Needspace{24\baselineskip}
+\appendix
+\section{模块与 Python 复现文件}
+\label{app:python-files}
+\input{sections/code_appendix}
+
+\end{document}

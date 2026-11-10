@@ -1,0 +1,130 @@
+% !TeX root = ../main.tex
+\input{tables/scorecard_macros}
+\begingroup
+\setlength{\intextsep}{6pt}
+\setlength{\textfloatsep}{9pt}
+\setlength{\abovedisplayskip}{6pt}
+\setlength{\belowdisplayskip}{6pt}
+\setlength{\abovedisplayshortskip}{3pt}
+\setlength{\belowdisplayshortskip}{5pt}
+
+\subsection{刻度推导与分数分解}
+设坏样本概率为 $p\in(0,1)$，好坏几率为 $O=\frac{1-p}{p}$，评分函数为 $S=A+B\ln O$。
+几率翻倍时分差为 $B[\ln(2O)-\ln O]=20$，且 $A+B\ln 19=600$，得到
+\begin{equation}
+  B\ln 2=20,\qquad B=\frac{20}{\ln 2}\approx\ScoreB,\qquad
+  A=600-B\ln 19\approx\ScoreA.
+  \label{eq:score-scaling}
+\end{equation}
+概率与分数之间的转换为
+\begin{equation}
+  S(p)=A+B\ln\frac{1-p}{p},\qquad
+  p(S)=\frac{1}{1+\exp\!\left(\frac{S-A}{B}\right)}.
+  \label{eq:score-probability}
+\end{equation}
+令 $\widehat\eta_i$ 为式~\eqref{eq:woe-logistic} 的拟合对数几率。代入后可分解客户 $i$ 的总分
+\begin{equation}
+  S_i=A-B\widehat\eta_i=S_0+\sum_{j=1}^{8}s_j(x_{ij}),\qquad
+  S_0=A-B\widehat\beta_0,\qquad s_j(x_{ij})=-B\widehat\beta_j w_j(x_{ij}).
+  \label{eq:score-decomposition}
+\end{equation}
+评分锚点由 $O=19$ 给定，即 $p=\tfrac{1}{20}=5\%$ 时 $S=600$。令八项 WOE 均为零，
+则截距取值 $b$ 对应基准概率 $p_0(b)=(1+\exp(-b))^{-1}$ 和基准分 $S_0(b)=A-Bb$，因此
+\[
+  \begin{aligned}
+    b=0 &\quad\Longrightarrow\quad p_0(0)=50\%,\qquad S_0(0)=A\approx\ScoreA,\\
+    \widehat\beta_0\approx-2.602547 &\quad\Longrightarrow\quad
+    p_0(\widehat\beta_0)\approx6.8975\%,\qquad S_0(\widehat\beta_0)\approx\ScoreIntercept.
+  \end{aligned}
+\]
+由于 $\widehat\eta_i$ 随坏样本概率严格递增，$B>0$ 时坏样本概率越高，分数越低。
+对同一模型采用新刻度 $S_i'=A'-B'\widehat\eta_i$（$B'>0$），任意两位客户 $i,k$ 满足
+\[
+  S_i'-S_k'=-B'(\widehat\eta_i-\widehat\eta_k)=\frac{B'}{B}(S_i-S_k).
+\]
+截距 $A'$ 在分差中抵消，$B'/B$ 为正，分差的正、负和零均保持，因此未取整分数的先后与并列关系均保持。
+
+\subsection{完整评分卡}
+表~\ref{tab:complete-scorecard} 包含全部 \ScoreCardBins{} 档及独立基准分。
+整数展示对基准分和八项档分各取最近整数，恰好半分时远离 0，再相加；
+它不一定等于总分最后一次取整。计算及阈值评价均使用未取整分数，不截断分值。
+表中分值未取整，仅显示三位小数，完整精度另存 \texttt{scorecard.csv}。
+
+\begin{table}[!htbp]
+  \centering
+  \caption{完整评分卡}
+  \label{tab:complete-scorecard}
+  \scriptsize\linespread{1}\selectfont
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{0.96}
+  \input{tables/scorecard_complete}
+\end{table}
+
+\subsection{新客户评分函数与人工案例}
+设 $\boldsymbol{x}\in\mathcal X$ 为新客户的十项原始输入。用 $T$ 表示第~\ref{sec:preprocessing}~节的冻结预处理和八项入模变量选取，
+令 $\widetilde{x}_j=[T(\boldsymbol{x})]_j$，$w_j(\widetilde{x}_j)$ 为按冻结档位查得的 WOE。
+新客户的坏样本概率和未取整总分由下式给出。
+\begin{equation}
+  \begin{aligned}
+    \widehat\eta(\boldsymbol{x})&=\widehat\beta_0+\sum_{j=1}^{8}\widehat\beta_j w_j(\widetilde{x}_j),\\
+    \widehat p(\boldsymbol{x})&=\frac{1}{1+\exp[-\widehat\eta(\boldsymbol{x})]},\\
+    S(\boldsymbol{x})&=A-B\widehat\eta(\boldsymbol{x})
+      =S_0+\sum_{j=1}^{8}\bigl[-B\widehat\beta_j w_j(\widetilde{x}_j)\bigr].
+  \end{aligned}
+  \label{eq:score-new-customer}
+\end{equation}
+
+式中系数、分箱、WOE 和刻度均取已冻结的值。函数 \texttt{score\_customer} 接受包含十项原始字段的字典，
+返回 $\widehat p(\boldsymbol{x})$、$S(\boldsymbol{x})$、整数展示分及逐项明细。
+
+构造低、中、高三组人工输入，使用同一冻结评分卡计算。风险标签表示三个案例的相对预测风险。
+表~\ref{tab:scorecard-case-detail} 展示八个入模特征的原值、档位、WOE 和档分，
+另两项输入与完整计算结果见仓库的 \path{examples/scenarios/}。总分另加基准分 $S_0$。
+
+\begin{table}[H]
+  \centering
+  \caption{三组人工输入的逐项评分}
+  \label{tab:scorecard-case-detail}
+  \footnotesize\linespread{1}\selectfont
+  \setlength{\tabcolsep}{2pt}
+  \renewcommand{\arraystretch}{1.12}
+  \newcommand{\casevalue}[2]{\shortstack[r]{$#1$\\[1pt]$#2$}}
+  \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}l*{3}{r>{$}r<{$}>{$}r<{$}}@{}}
+    \toprule
+    & \multicolumn{3}{c}{低风险}
+    & \multicolumn{3}{c}{中风险}
+    & \multicolumn{3}{c}{高风险} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(l){8-10}
+    变量 & \shortstack[r]{原值\\档位} & \text{WOE} & \text{档分}
+         & \shortstack[r]{原值\\档位} & \text{WOE} & \text{档分}
+         & \shortstack[r]{原值\\档位} & \text{WOE} & \text{档分} \\
+    \midrule
+    \input{tables/synthetic_score_detail}
+  \end{tabular*}
+  \par\smallskip
+  \parbox{\linewidth}{\scriptsize 原值在上，档位在下。档分显示三位小数，计算使用完整精度。}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{三组人工输入的总分与概率核验}
+  \label{tab:scorecard-case-summary}
+  \footnotesize\linespread{1}\selectfont
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.18}
+  \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}l*{6}{>{$}r<{$}}@{}}
+    \toprule
+    & \multicolumn{3}{c}{评分（分）} & \multicolumn{3}{c}{坏样本概率（\%）} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    案例 & \text{未取整} & \text{整数} & \text{取整误差}
+         & \text{模型输出} & \text{原分反算} & \text{整数分反算} \\
+    \midrule
+    \input{tables/synthetic_score_summary}
+  \end{tabular*}
+\end{table}
+
+表~\ref{tab:scorecard-case-summary} 对照模型输出与分数反算概率。未取整分数可还原模型概率，
+展示分取整会带来小幅偏差。原实验在全体 150,000 条记录上核验，最大反算概率误差为 $6.11\times10^{-16}$，
+逐项求和与 $A-B\eta$ 的最大差为 $1.14\times10^{-13}$ 分。
+测试集最大取整绝对误差为 \ScoreMaxRoundError{} 分，低于九项各取整的 $9\times0.5=4.5$ 分理论界。
+\endgroup

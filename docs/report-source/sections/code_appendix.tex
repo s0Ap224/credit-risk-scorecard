@@ -1,0 +1,39 @@
+% !TeX root = ../main.tex
+表~\ref{tab:python-files} 按报告模块列出运行入口。脚本沿用项目目录结构，
+在仓库根目录运行 \path{python run_pipeline.py} 可复现数值结果。表中列出各阶段的独立入口。
+
+\begin{table}[H]
+  \centering
+  \caption{报告模块与 Python 文件对照}
+  \label{tab:python-files}
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{@{}p{0.34\linewidth}p{0.60\linewidth}@{}}
+    \toprule
+    开发环节 & 对应文件 \\
+    \midrule
+    模块一　样本划分与重复检查 & \path{scripts/split_samples.py} \\
+    模块二　审计、风险分析与清洗 &
+      \path{scripts/audit_data.py}、\path{scripts/feature_risk.py}\newline
+      \path{scripts/preprocess.py} \\
+    模块三　分箱、WOE 与 IV & \path{scripts/binning_woe.py} \\
+    模块四　Logistic 与基准比较 & \path{scripts/fit_logistic.py} \\
+    模块五　评分卡与逐户核验 & \path{scripts/scorecard.py} \\
+    模块六　模型评价与风险分层 & \path{scripts/evaluate_models.py} \\
+    模块七　阈值选择与业务决策 & \path{scripts/decision_thresholds.py} \\
+    选做拓展　评分分布 PSI & \path{scripts/score_psi.py} \\
+    公共依赖　绘图与检查 &
+      \path{utils/setup_style.py}、\path{utils/plot_style.py}\newline
+      \path{utils/export_figure.py}、\path{utils/visual_qa.py} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{输入与运行顺序}
+将 Kaggle 原始 \path{cs-training.csv} 与 \mbox{\texttt{Data Dictionary.xls}} 放在项目根目录。
+样本划分种子为 \texttt{20261103}。模块七先用参数 \texttt{freeze} 在验证集上冻结阈值，
+再用 \texttt{evaluate} 评价测试集。程序将结果写入 \path{results/}，图形写入 \path{figures/}。
+
+\paragraph{Python 环境}
+Python 3.12。主要依赖为 NumPy 2.3.4、pandas 2.3.3、SciPy 1.16.2、scikit-learn 1.7.2、
+Matplotlib 3.10.7、Pillow 12.0.0、PyMuPDF 1.28.2、xlrd 2.0.2。

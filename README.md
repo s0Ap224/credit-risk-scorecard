@@ -6,6 +6,8 @@
 
 作者 [s0Ap224](https://github.com/s0Ap224) · Python 3.12 · pandas · scikit-learn
 
+**[阅读完整报告 PDF](docs/credit-risk-scorecard-report.pdf)** · [三档人工评分案例](examples/scenarios/README.md) · [实验汇总表](docs/results/README.md) · [LaTeX 源稿与矢量图](docs/report-source/README.md)
+
 ## 项目结果
 
 在固定的 30,000 条本地留出测试样本上，WOE 评分模型达到 **AUC 0.8487、KS 0.5411、AP 0.3681**。训练、验证、测试按 60% / 20% / 20% 分层划分，随机种子为 `20261103`，测试集坏样本率为 6.6833%。所有成绩均为本地评估，Kaggle 排名及线上提交成绩尚未记录。
@@ -71,6 +73,16 @@ macOS / Linux 的环境解释器路径为 `.venv/bin/python`。完整运行生�
 输入包括十个原始特征，输出包含 `probability`、`score_unrounded`、`score_rounded_sum` 和逐项 `breakdown`。推理使用已保存的预处理、WOE 和模型参数。正式决策使用未取整分数。
 
 可先浏览[示例评分结果](examples/customer_score.json)，查看输出结构与逐项解释。
+
+三组人工案例按预测概率从低到高排列。总分为未取整分数，案例标签表示三组输入的相对风险。
+
+| 人工案例 | 未取整总分 | 预测坏样本概率 |
+|---|---:|---:|
+| 低风险 | 644.108 | 1.13% |
+| 中风险 | 586.541 | 7.74% |
+| 高风险 | 474.417 | 80.34% |
+
+三组输入和八项分值贡献可在[案例对照](examples/scenarios/README.md)中查看。
 
 ## 代码导航
 

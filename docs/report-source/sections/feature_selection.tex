@@ -1,0 +1,92 @@
+% !TeX root = ../main.tex
+
+候选输入包括十个原始变量和家属人数原缺失指示，共 11 项。
+表~\ref{tab:iv-candidates} 按训练 IV 排序。
+IV 衡量单个变量在当前分箱下的边际区分能力，不代表进入联合模型后的独立贡献，
+也不要求风险关系单调。故以 IV 确定检查优先级，再结合字段时点、档量、冗余与验证表现作取舍。
+
+\begin{table}[!htbp]
+  \centering
+  \caption{候选变量的训练集 IV 与初选结果}
+  \label{tab:iv-candidates}
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \renewcommand{\arraystretch}{1.05}
+  \input{tables/iv_summary}
+  \begin{minipage}{\linewidth}
+    \footnotesize
+    注：最小档人数包含特殊档；特殊档 IV 占比为其贡献之和除以变量总 IV。
+    三类逾期的特殊档均为 96/98，月收入的特殊档为缺失及 $[0,10)$。
+    初选结果同时使用表~\ref{tab:candidate-validation} 的联合诊断，不按 IV 阈值直接删除。
+  \end{minipage}
+\end{table}
+
+\paragraph{高 IV 的来源与字段时点}
+对于额度使用率和三类逾期的 IV 均超过 0.5的候选变量，需要核查其区分信息是否依赖稀疏档或未来信息。
+额度使用率的最小档有 1,973 人；三类逾期普通档最少分别有 805、971、779 人
+（依次为 30--59、60--89、90 天及以上），并无零好样本或零坏样本档。
+96/98 对三类逾期总 IV 的贡献占比分别仅为 5.3\%、7.1\%、4.7\%，
+说明高 IV 主要来自普通逾期记录的分布差异，不能归因于这 161 人的特殊编码。
+因此，额度使用率和三类历史逾期变量均保留为候选变量。
+
+\paragraph{候选变量方案确定}
+为判断候选变量在联合模型中是否仍提供额外信息，使用相同设置的 Logistic 模型比较不同变量组合，
+结果见表~\ref{tab:candidate-validation}。完整 11 项方案作为参照，比较按 IV 阈值筛选
+及综合筛选后的验证表现。
+
+\begin{table}[!htbp]
+  \centering
+  \caption{候选变量方案的验证集诊断表现}
+  \label{tab:candidate-validation}
+  \footnotesize
+  \setlength{\tabcolsep}{5pt}
+  \renewcommand{\arraystretch}{1.05}
+  \input{tables/candidate_validation}
+\end{table}
+
+\paragraph{8 项初选方案的形成过程}
+完整模型先纳入全部 11 项，然后依训练 IV 由小到大逐项试删，每次删除后重新拟合模型并计算验证指标。
+候选变量简化统一基准：AUC 最多减少 0.001，
+对数损失和 Brier 最多各增加 0.0001，三项同时满足才简化；KS 用作辅助观察。
+这些差异界限是本研究预设的简化标准，不是统计显著性检验。
+实际通过检查的三次删除见表~\ref{tab:accepted-removals}，其间其他变量的试删未通过，故继续保留。
+
+\begin{table}[!htbp]
+  \centering
+  \caption{从 11 项到 8 项的已接受删选步骤}
+  \label{tab:accepted-removals}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.05}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    当前组合 & 项数 & AUC & KS & 对数损失 & Brier \\
+    \midrule
+    完整方案 & 11 & 0.863872 & 0.569176 & 0.181303 & 0.049968 \\
+    去掉家属人数缺失指示 & 10 & 0.863898 & 0.568997 & 0.181289 & 0.049961 \\
+    再去掉月收入 & 9 & 0.863562 & 0.567191 & 0.181372 & 0.049967 \\
+    再去掉在用信贷账户数 & 8 & 0.863584 & 0.567834 & 0.181375 & 0.049965 \\
+    \bottomrule
+  \end{tabular}
+  \begin{minipage}{\linewidth}
+    \footnotesize
+  \end{minipage}
+\end{table}
+
+家属人数原缺失指示的 IV 为 0.0038，单独区分能力较弱；
+从完整模型中去掉它后，符合上文提到的简化条件。
+
+月收入的 IV 为 0.0730，尽管其具有一定的单变量信息，但数据发现，
+在去掉家属人数缺失指示的基础上，再去掉月收入，AUC 从 0.863898 降至 0.863562，
+对数损失从 0.181289 升至 0.181372，但相对完整方案的差异仍在上述界限内。
+另一方面，本数据中该字段的信息完整性有限：训练集约 19.82\%的收入缺失，
+另有约 1.50\%的收入低于 10，两类合计约占 21.33\%。
+这些记录虽已通过特殊分箱保留状态信息，却难以直接解释为客户的正常收入水平。
+
+在用信贷账户数的 IV 为 0.1016，但在上述 9 项组合中去掉它，
+符合上文提到的简化条件，当前联合预测中仍可省略。
+三个变量的取舍均依据实际试删结果，而非达到或未达到某个 IV 阈值。
+
+由此，进入模块四的 8 项候选为额度使用率、年龄、三类历史逾期次数、
+DebtRatio、房地产贷款数和家属人数。该组合以较少输入取得接近完整方案的验证表现，
+是本次顺序筛选的初选结果；最终效果仍在模型冻结后通过测试集评价。

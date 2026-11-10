@@ -1,0 +1,72 @@
+% !TeX root = ../main.tex
+
+本研究以 Kaggle 原始 Give Me Some Credit 竞赛中的匿名个人借款人信用记录为评分对象，
+在历史特征已可取得、未来表现尚未发生的评分时点 $t_0$，利用年龄、收入、负债、
+授信使用情况及历史逾期记录等信息，预测该借款人在随后两年内发生
+90 天及以上严重逾期或更严重情形的概率。
+目标变量为 \texttt{SeriousDlqin2yrs}，取值 1 表示发生目标事件，取值 0 表示未发生，
+分别称为坏样本与好样本。评分用于风险排序、预警复核以及后续教学情景下的
+风险标记和模拟接受决策；模型概率越高，风险越高，转换后的评分卡则统一采用分数越高、风险越低的方向。
+
+\paragraph{观察窗口、评分时点与表现窗口。}
+如图~\ref{fig:time-window} 所示，特征构造与结果观察以 $t_0$ 为界：
+\begin{enumerate}
+  \setlength{\itemsep}{0.15em}
+  \setlength{\parskip}{0pt}
+  \item \textbf{观察窗口：}汇总评分时点之前已形成且在 $t_0$ 可获得的个人财务和信用历史，
+  构造特征向量 $\boldsymbol{x}_i$（包含年龄、月收入、负债收入比等全部10个特征）。
+  \item \textbf{评分时点：}在 $t_0$ 基于已有信息计算个体风险；行号仅用于追踪记录，
+  不进入预测特征，未来表现信息（SeriousDlqin2yrs）不参与特征构造。
+  \item \textbf{表现窗口：}按照竞赛任务设定，在 $t_0$ 后两年内观察是否发生目标事件，
+  待窗口结束、标签成熟后评价预测结果。
+\end{enumerate}
+
+令 $Y_i$ 表示第 $i$ 条记录对应借款人在两年表现窗口内的目标事件，则
+\begin{equation}
+  Y_i=
+  \begin{cases}
+    1, & \text{两年表现窗口内发生严重逾期或更严重情形},\\
+    0, & \text{该窗口内未发生上述目标事件},
+  \end{cases}
+  \qquad
+  p_i=P\!\left(Y_i=1\mid\boldsymbol{x}_i\right).
+  \label{eq:prediction-target}
+\end{equation}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    box/.style={draw=blue!55!black,fill=blue!3,rounded corners=2pt,
+      minimum height=2.05cm,text width=4.05cm,align=center,inner sep=6pt,
+      font=\small},
+    flow/.style={-{Latex[length=2.2mm]},thick,draw=blue!65!black}
+  ]
+    \node[box] (history) at (-5.15,0) {
+      \textbf{历史特征／观察窗口}\\[4pt]
+      财务状况、授信使用\\
+      与历史逾期信息\\[3pt]
+      $\boldsymbol{x}_i$：评分时已可取得
+    };
+    \node[box] (scoring) at (0,0) {
+      \textbf{预测时点 $t_0$}\\[4pt]
+      输入已有特征\\
+      计算风险概率 $p_i$\\[3pt]
+      未来目标事件尚未观察
+    };
+    \node[box] (outcome) at (5.15,0) {
+      \textbf{未来两年／表现窗口}\\[4pt]
+      90 天及以上严重逾期\\
+      或更严重情形\\[3pt]
+      窗口成熟后确定标签 $Y_i$
+    };
+    \draw[flow] (history.east) -- (scoring.west);
+    \draw[flow] (scoring.east) -- (outcome.west);
+  \end{tikzpicture}
+  \caption{历史特征、预测时点与表现窗口的关系（示意图不按时长比例绘制）}
+  \label{fig:time-window}
+\end{figure}
+
+\paragraph{时间口径与应用范围。}
+上述两年表现窗口依据竞赛任务及本次作业设定。
+公开文件未提供逐户评分日期，无法据此还原各人的观察窗口起止日期；
+各历史变量的统计口径以数据字典为准。

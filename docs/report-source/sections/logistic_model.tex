@@ -1,0 +1,118 @@
+% !TeX root = ../main.tex
+\input{tables/logistic_macros}
+\begingroup
+\setlength{\intextsep}{7pt}
+\setlength{\textfloatsep}{10pt}
+
+\subsection{模型估计与诊断}
+将第~\ref{sec:feature-selection}~节的 8 项冻结 WOE 输入模型，以坏样本为正类：
+\begin{equation}
+  Y_i\mid\boldsymbol{x}_i\sim\mathrm{Bernoulli}(p_i),\qquad
+  \eta_i=\log\frac{p_i}{1-p_i}=\beta_0+\sum_{j=1}^{8}\beta_jw_j(x_{ij}).
+  \label{eq:woe-logistic}
+\end{equation}
+概率为 $p_i=(1+e^{-\eta_i})^{-1}$。按记录采用条件独立的工作假设，重复与同源限制沿用第~\ref{sec:sample-split}~节；
+条件对数几率对 WOE 加性，无需八个特征相互独立。固定 $C=1$，以无类别权重的 L2 惩罚估计
+\begin{equation}
+  \widehat{\boldsymbol\beta}
+  =\arg\min_{\boldsymbol\beta}\left\{
+    \sum_{i\in\mathcal T}\bigl[\log(1+e^{\eta_i})-Y_i\eta_i\bigr]
+    +\frac{1}{2C}\sum_{j=1}^{8}\beta_j^2\right\},
+  \label{eq:penalized-logistic}
+\end{equation}
+其中 $\mathcal T$ 为训练集，截距不惩罚。采用 \texttt{lbfgs}数值优化算法、容差 $10^{-8}$、最多 2,000 次迭代，
+在 \LogitWoeIterations{} 次后收敛。含截距的标准化诊断矩阵秩为 9、条件数为 \LogitCondition，最大 VIF 为 \LogitMaxVIF。
+后可根据此惩罚估计得到八个候选变量的WOE Logistic的估计系数。
+
+\begin{table}[!htbp]
+  \centering
+  \caption{八变量 WOE Logistic 的估计系数}
+  \label{tab:logistic-coefficients}
+  \footnotesize
+  \setlength{\tabcolsep}{8pt}
+  \renewcommand{\arraystretch}{1.02}
+  \input{tables/logistic_coefficients}
+  \begin{minipage}{\linewidth}
+    \footnotesize
+    注：非截距行的指数表示其他 WOE 固定时，该变量增加 1 个 WOE 单位的坏样本几率比；
+    截距项的指数表示所有 WOE 为 0 时的坏/好几率。
+  \end{minipage}
+\end{table}
+
+表~\ref{tab:logistic-coefficients} 八项系数均为负：WOE 增大时条件坏样本几率下降。
+以负债收入比为例，当其他七项 WOE 不变时，负债收入比的 WOE 增加 1 个单位，
+坏样本几率变为原来的 0.5402 倍，即降低约 45.98\%。
+年龄系数的单位也是 WOE，并非每增加一岁的效应，截距不代表平均客户风险。
+
+\subsection{具体档位的条件几率比}
+同一变量由档位 $a$ 变为 $b$，其余七项输入固定时，
+\begin{equation}
+  \mathrm{OR}_{b:a}
+  =\frac{p_b/(1-p_b)}{p_a/(1-p_a)}
+  =\exp\!\left\{\widehat\beta_j\bigl(w_{j,b}-w_{j,a}\bigr)\right\}.
+  \label{eq:conditional-bin-odds-ratio}
+\end{equation}
+
+以第~\ref{sec:scorecard}~节的低风险人工输入为参照。负债收入比分别设为 0.25 与 2，严重逾期次数分别设为 0 与 1。
+分别只改设负债比或严重逾期档位，结果见表~\ref{tab:logistic-odds-examples}。
+DebtRatio 的 WOE 差为 $-0.65815$，与系数 $-0.76611$ 结合得到 $\mathrm{OR}\approx1.656$；
+严重逾期的 WOE 差为 $-2.35001$，与系数 $-0.53753$ 结合得到 $\mathrm{OR}\approx3.537$。
+几率倍数不等于概率倍数；概率变化依赖参照特征，表示模型情景比较，不解释为因果效应。
+
+\begin{table}[!htbp]
+  \centering
+  \caption{固定其余特征后的档位比较}
+  \label{tab:logistic-odds-examples}
+  \footnotesize
+  \setlength{\tabcolsep}{6pt}
+  \input{tables/logistic_odds_examples}
+\end{table}
+
+\subsection{两个基准与同样本比较}
+\paragraph{常数概率基准}
+对所有客户预测训练集坏样本率 $\widehat p_0=6{,}016/90{,}000=\LogitTrainingRate$，
+不从测试标签重估先验。
+\paragraph{原始字段 Logistic 基准}
+同样八个字段中，年龄保留原值，其余取 $\log(1+x)$。
+96/98 对应普通计数置 0，以单个“任一逾期特殊”指示保留状态，共 9 个设计量，避免三个相同标记重复输入。
+按训练均值和总体标准差缩放后冻结，使用同一 $C$、求解器及无权重设置，
+17 次后收敛，矩阵满列秩且未检出分离。
+
+两模型参数和规则先冻结，随后才打开同一批 30,000 条测试记录（坏样本 2,005 条），结果见表~\ref{tab:logistic-comparison}。
+两个 Logistic 模型采用相同的八个原始字段，分别使用数值变换后的原值表示和分箱后的 WOE 表示。
+测试结果显示，WOE 流程的 AUC 提高约 0.0235，KS 和 AP 同时提高，
+对数损失与 Brier 分别降低约 4.53\%和 2.91\%，
+表明该流程在本次实验中改善了风险排序与整体概率预测质量。
+这与分箱能够表达不同取值区间的风险差异相一致，例如 DebtRatio 的非单调关系难以通过单一对数变换充分表达。
+
+\paragraph{不平衡与准确率}
+训练沿用约 $13.96:1$ 的好坏比，各记录等权。给定模型预测的坏样本概率 $\widehat p_i$，
+记分类阈值为 $t$，由此定义预测标签
+\[
+  \widehat Y_i(t)=
+  \begin{cases}
+    1,\ \text{标记为高风险客户}, & \widehat p_i\geq t,\\
+    0,\ \text{不标记为高风险客户}, & \widehat p_i<t.
+  \end{cases}
+\]
+
+若误报与漏报代价相同且预测概率可信，标记和不标记的期望成本分别与
+$1-\widehat p_i$ 和 $\widehat p_i$ 成正比。当 $1-\widehat p_i\leq\widehat p_i$ 时选择标记，
+得到等代价对照阈值 $t_0=0.5$。（即此时考虑误报好客户成本与漏报坏客户成本相同）
+
+以坏样本为正类，将 WOE 模型的 $\widehat Y_i(t_0)$ 与测试集实际标签逐一比较，
+得到正确检出 $TP=364$、漏报 $FN=1{,}641$、误报 $FP=244$、正确识别好客户 $TN=27{,}751$。
+准确率与坏样本召回率的定义及代入结果分别为
+\[
+  \begin{gathered}
+    \mathrm{Accuracy}(t)=\frac{TP(t)+TN(t)}{N},\qquad
+    \mathrm{Recall}_{\mathrm{bad}}(t)=\frac{TP(t)}{TP(t)+FN(t)},\\[0.3ex]
+    \mathrm{Accuracy}(t_0)=\frac{364+27{,}751}{30{,}000}=93.72\%,\qquad
+    \mathrm{Recall}_{\mathrm{bad}}(t_0)=\frac{364}{2{,}005}=18.15\%.
+  \end{gathered}
+\]
+
+在该阈值下，好样本识别率为 99.13\%。常数基准的预测概率低于 $t_0$，因而将所有人判为好样本，
+准确率等于好样本占比 93.32\%，坏样本召回率为 0。好样本数量占优，使总体准确率主要反映多数类的识别表现。
+
+\endgroup

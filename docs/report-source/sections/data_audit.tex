@@ -1,0 +1,25 @@
+% !TeX root = ../main.tex
+\input{tables/audit_macros}
+
+审计全体 150,000 条及固定训练集 90,000 条记录。
+表~\ref{tab:data-audit} 为全样本非缺失有限值的线性插值分位数。
+行号、目标分别为标识与标签；十项特征均为数值型，家属人数虽存为浮点数，仍属计数。
+
+\begin{table}[htbp]
+  \centering
+  \caption{全样本特征审计摘要（比例变量保留原始比值）}
+  \label{tab:data-audit}
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.03}
+  \input{tables/audit_summary}
+\end{table}
+
+缺失集中于月收入（\AuditIncomeMissing{} 条）和家属人数（\AuditDependentsMissing{} 条），
+训练集分别为 \AuditTrainIncomeMissing{}、\AuditTrainDependentsMissing{} 条，其余特征无缺失。
+
+
+另有零年龄 \AuditAgeZero{} 条（训练集 \AuditTrainAgeZero{} 条）、
+零收入 \AuditZeroIncome{} 条、逾期 96/98 特殊记录 \AuditSpecialLate{} 条。
+额度使用率、负债收入比大于 1 的记录分别为 \AuditUtilizationAboveOne{}、\AuditDebtAboveOne{} 条。
+处理规则见第~\ref{sec:preprocessing} 节。

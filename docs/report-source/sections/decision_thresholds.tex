@@ -1,0 +1,107 @@
+% !TeX root = ../main.tex
+本节用冻结的 WOE Logistic 概率和未取整评分，在验证集选定规则后，以同一批
+30,000 条测试记录评价。误报和漏报成本、审批坏率目标均为教学情景设定。
+
+\subsection{代价敏感的风险标记}
+设客户的坏样本概率为 $p$。标记好客户产生误报成本 $C_{\mathrm{FP}}=1$，
+放过坏客户产生漏报成本 $C_{\mathrm{FN}}=5$。在概率可信且成本适用于每位客户时，
+标记的条件期望成本为 $1-p$，放过的条件期望成本为 $5p$。取等号时标记，得到
+\[
+  1-p\leq 5p \quad\Longleftrightarrow\quad
+  p\geq t_{\mathrm{theory}}=\frac{1}{1+5}=\frac16 .
+\]
+以冻结模型的预测概率 $\widehat p$ 执行时，由式~\eqref{eq:score-probability} 得到等价分数规则
+\[
+  \widehat p\geq t\quad\Longleftrightarrow\quad
+  S\leq s(t),\qquad s(t)=A+B\ln\frac{1-t}{t}.
+\]
+
+验证前固定概率网格 $0.01,0.02,\ldots,0.99$，另纳入 $1/6$。以
+$(\mathrm{FP}+5\,\mathrm{FN})/n$ 最小为准，同成本时取较高阈值以减少标记量。
+验证集最优阈值为 $0.13$，均成本为 $0.21060$，对应 $S\leq 569.891525\ldots$。
+同一验证集上，$0.5$ 和 $1/6$ 的均成本分别为 $0.28133$ 和 $0.21730$。
+冻结 $0.13$ 后，按表~\ref{tab:decision-flag-results} 在测试集比较三种规则。
+
+\begin{table}[H]
+  \centering
+  \caption{三种风险标记规则的测试集比较}
+  \label{tab:decision-flag-results}
+  \small
+  \setlength{\tabcolsep}{3.5pt}
+  \input{tables/decision_flag_results}
+
+  \smallskip
+\end{table}
+
+表~\ref{tab:decision-confusion-matrices} 按实际类别展开三种规则的混淆矩阵。坏样本为正类，
+好样本行中的标记人数为误报（FP），坏样本行中的未标记人数为漏报（FN）。
+
+\begin{table}[H]
+  \centering
+  \caption{三种风险标记规则的测试集混淆矩阵}
+  \label{tab:decision-confusion-matrices}
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    & \multicolumn{2}{c}{基准 \(t=0.5\)}
+    & \multicolumn{2}{c}{理论 \(t=1/6\)}
+    & \multicolumn{2}{c}{验证选定 \(t=0.13\)} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+    实际类别 & 未标记 & 标记 & 未标记 & 标记 & 未标记 & 标记 \\
+    \midrule
+    好样本 & 27,751 & 244 & 26,434 & 1,561 & 25,830 & 2,165 \\
+    坏样本 & 1,641 & 364 & 1,041 & 964 & 905 & 1,100 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+$0.5$ 只标记 608 户，精确率为 59.87\%，但漏掉 1,641 条坏样本，均成本最高。
+由 $1/6$ 降至 $0.13$ 后，标记量由 2,525 户增至 3,265 户，少漏 136 条坏样本，多误报 604 户。
+少漏带来的成本节省为 $136\times5=680$，扣除新增误报成本后净省 76，均成本由 0.22553 降至 0.22300。
+验证阈值在三种规则中成本最低，同时需要处理测试集约 10.88\% 的客户，精确率降至 33.69\%。
+
+\Needspace{23\baselineskip}
+\subsection{坏率约束下的模拟审批}
+给定整数分数门槛 $c$，接受所有未取整评分 $S_i\geq c$ 的客户，同分者使用同一规则。
+设验证集接受人数为 $N_c$、其中坏样本数为 $D_c$、验证集总人数为 $n_{\mathrm{val}}$。
+在事先固定的 $c=300,301,\ldots,900$ 上求
+\[
+  \max_c\ \frac{N_c}{n_{\mathrm{val}}}
+  \qquad\text{满足}\qquad
+  \frac{D_c}{N_c}\leq 5\%,\qquad
+  \frac{N_c}{n_{\mathrm{val}}}\geq 10\%.
+\]
+
+同接受人数时取较高门槛，若无可行门槛则报告不可行。
+验证集在 530 分时接受 28,973 户，坏率为 5.03\%，超出约束。
+遍历网格后，531 分是可行门槛中接受人数最多的方案，接受 28,928 户，坏率为 4.97\%。
+测试阶段沿用这一门槛，结果见表~\ref{tab:decision-approval-results}。
+
+\begin{table}[H]
+  \centering
+  \caption{冻结审批门槛在验证集与测试集上的表现}
+  \label{tab:decision-approval-results}
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \input{tables/decision_approval_results}
+
+  \smallskip
+  \parbox{0.96\linewidth}{\small 区间为测试集接受样本实际坏率的记录层面 Wilson 95\% 二项比例区间。}
+\end{table}
+
+测试集接受率为 96.58\%，接受者平均预测为 4.79\%，实际坏率为 5.06\%。
+点估计超过 5\% 目标约 0.06 个百分点，区间 $[4.81\%,5.31\%]$ 跨越 5\%。
+据此记录测试点估计超标，保留冻结门槛 531 分。区间表明，接受者坏率在 5\% 附近仍有抽样不确定性。
+
+按本报告的评分刻度，600 分对应好坏几率 $19:1$，预测坏样本概率为 $1/(19+1)=5\%$。
+对一位恰好得 600 分的客户，这表示模型根据评分时已知的信息，估计其未来两年内发生严重逾期或更严重情形的概率为 5\%。
+若规定 $S\geq 600$ 时接受，每位接受者的预测概率都不超过 5\%，客群的平均预测概率也不超过 5\%。
+实际坏样本率则要等两年表现窗口结束后，用发生目标事件的人数除以接受人数计算。
+受模型校准偏差和样本波动影响，实际坏样本率可能超过 5\%。本方案约束的是验证集的客群实际坏样本率，
+因此允许部分预测概率高于 5\% 的客户被接受。
+
+\paragraph{两种规则的行动目标}
+风险标记用于安排复核，在给定误报和漏报代价下比较标记量、检出量与成本。
+模拟审批则在客群坏率约束下扩大接受范围。例如，未取整分数在 $531$ 到 $569.891525\ldots$ 之间的客户，
+可同时满足接受与风险标记条件。现有数据支持比较复核容量和模拟接受风险。
+若要评价实际授信收益或优化审批政策，还需结合贷款收益、违约损失率与拒绝样本的后续表现。

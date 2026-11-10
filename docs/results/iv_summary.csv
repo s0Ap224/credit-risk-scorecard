@@ -1,0 +1,12 @@
+﻿feature,feature_cn,K,initial_K,min_n,min_ordinary_n,min_good,min_bad,iv,special_bins,special_iv,special_iv_share,iv_level,high_iv_review,selected
+RevolvingUtilizationOfUnsecuredLines,额度使用率,6,6,1973,1973,1250,218,1.1293059821333542,0,0.0,0.0,strong,True,True
+NumberOfTimes90DaysLate,90 天及以上逾期次数,5,5,161,779,70,91,0.8805273661887252,1,0.04160510193017903,0.047250208826856294,strong,True,True
+NumberOfTime30-59DaysPastDueNotWorse,30–59 天逾期次数,6,6,161,805,70,91,0.7804771907845403,1,0.04160035064151059,0.05330117411848215,strong,True,True
+NumberOfTime60-89DaysPastDueNotWorse,60–89 天逾期次数,4,4,161,971,70,91,0.5832368170025559,1,0.0416098541192148,0.07134298265507552,strong,True,True
+age,年龄,6,6,5248,5248,4634,271,0.25132333952610736,0,0.0,0.0,medium,False,True
+NumberOfOpenCreditLinesAndLoans,在用信贷账户数,6,6,1119,1119,827,292,0.10155904308179843,0,0.0,0.0,medium,False,False
+MonthlyIncome,月收入,6,6,1353,11884,1306,47,0.07299243259177804,2,0.009839558490900121,0.1348024465211269,weak,False,False
+DebtRatio,负债收入比,7,7,2445,2445,2240,119,0.06211896294896987,0,0.0,0.0,weak,False,True
+NumberRealEstateLoansOrLines,房地产贷款数,4,4,2179,2179,1923,256,0.058907271344036324,0,0.0,0.0,weak,False,True
+NumberOfDependents,家属人数,5,5,2303,2303,2068,235,0.03642466750648672,0,0.0,0.0,weak,False,True
+NumberOfDependents_missing,家属人数原缺失指示,2,2,2355,2355,2249,106,0.0038479156217957923,0,0.0,0.0,very_weak,False,False
