@@ -1,0 +1,21 @@
+# Licensed source data and all record-level outputs stay local.
+/cs-training.csv
+/cs-test.csv
+/Data Dictionary.xls
+/sampleEntry.csv
+/results/
+/latex/
+/figures/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vscode/
+.idea/
+.env
+.env.*
+*.log
+*.zip
+.DS_Store
+Thumbs.db
